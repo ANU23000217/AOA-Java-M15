@@ -1,6 +1,6 @@
 
 # EX 5B Topological Sort - Khan's Algorithm
-## DATE: 
+## DATE:
 ## AIM:
 To write a Java program to for given constraints.
 Problem Description:
