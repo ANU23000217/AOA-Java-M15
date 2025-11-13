@@ -1,126 +1,115 @@
 
-# EX 5E Minimum Spanning Tree -Boruvka's Algorithm
+# EX 5D Flower Planting.
 ## DATE: 
 ## AIM:
 To write a Java program to for given constraints.
-Boruvka's Algorithm - Minimum Spanning Tree
+You are given n gardens, labelled from 1 to n.
 
-Find the MST using Boruvka's Algorithm for a weighted undirected graph.
-<img width="292" height="235" alt="image" src="https://github.com/user-attachments/assets/06246b27-37a9-40a8-bd7a-37a1d5187cd1" />
+You also have a list called paths, where each element paths[i] = [xi, yi] represents a bidirectional road connectingthe  garden xi and garden yi.
+
+You want to plant one flower in each garden, and there are exactly 4 types of flowers labelled as 1, 2, 3, and 4.
+
+Your goal is to plant flowers such that:
+
+No two connected gardens (i.e., connected via a path) have the same flower type.
+
+Return any valid flower assignment as an array where:
+
+answer[i] is the flower type planted in the (i+1) ᵗʰ garden
+
+It is guaranteed that:
+
+No garden is connected to more than 3 other gardens
+
+A valid flower assignment always exists
+
+<img width="177" height="292" alt="image" src="https://github.com/user-attachments/assets/36aa40cb-1cdd-4746-b1a6-fc51ce6e96aa" />
 
 ## Algorithm
-1. Input the Graph
-Read the number of vertices V and edges E.
-Store all edges with their source (src), destination (dest), and weight (weight) in a list.
-2. Initialize Components
-Create a parent[] array where each vertex is its own parent (disjoint set initialization).
-Set the number of connected components to V (each vertex starts as a separate component).
-3. Repeat Until Only One Component Remains
-Create an array cheapest[] to store the cheapest edge for each component.
-4. Find the Cheapest Edge for Each Component
-For every edge (u, v):
-Find the component (set) of u and v using the find() operation.
-If they belong to different components:
-Update the cheapest edge for both components if this edge has a smaller weight.
-5.  Add the Cheapest Edges to the MST
-For each vertex i, if cheapest[i] is not null:
-Find the components of its source and destination.
-6. Once all vertices are connected (components = 1), print all selected edges and the total MST weight.  
+1. Input the Data
+Read the number of gardens n and the number of paths m.
+Read each of the m paths that connect two gardens and store them in an adjacency list (undirected graph). 
+2. Build the Adjacency List
+For each path (x, y), add y to the adjacency list of x and vice versa (convert to 0-based indexing).
+3. Initialize Flower Assignment
+Create an array ans[] of size n to store the flower type (1–4) for each garden.
+Each garden will eventually have one flower type assigned.
+4.  Assign Flowers Greedily
+For each garden:
+Create a boolean array used[5] to track which flower types are already used by its adjacent gardens.
+For every neighbor, mark its flower type as used.
+5. Output the Result
+Print the flower type assigned to each garden in order.  
 
 ## Program:
 ```
 /*
 Developed by: ANU RADHA N
 Register Number:212223230018
+
 import java.util.*;
 
-public class BoruvkaMST {
-    static int[] parent;
+public class GardenFlowerPlanner {
 
-    // Find with path compression
-    static int find(int i) {
-        if (parent[i] != i)
-            parent[i] = find(parent[i]);
-        return parent[i];
-    }
+    public static int[] assignFlowers(int n, int[][] paths) {
+        @SuppressWarnings("unchecked")
+        List<Integer>[] adj = new ArrayList[n];
+        for (int i = 0; i < n; i++) {
+            adj[i] = new ArrayList<>();
+        }
 
-    // Union two sets
-    static void union(int x, int y) {
-        int xset = find(x);
-        int yset = find(y);
-        parent[xset] = yset;
-    }
+        // Build adjacency list
+        for (int[] path : paths) {
+            int x = path[0] - 1; // convert to 0-indexed
+            int y = path[1] - 1;
+            adj[x].add(y);
+            adj[y].add(x);
+        }
 
-    static int boruvkaMST(int V, List<Edge> edges) {
-        parent = new int[V];
-        for (int i = 0; i < V; i++) parent[i] = i;
+        int[] ans = new int[n]; // flower type for each garden
 
-        int components = V;
-        int mstWeight = 0;
+        for (int i = 0; i < n; i++) {
+            boolean[] used = new boolean[5]; // flower types 1–4
 
-        // Keep track of cheapest edge for each component
-        while (components > 1) {
-            Edge[] cheapest = new Edge[V];
-
-            // Step 1: Find cheapest edge for each component
-            for (Edge e : edges) {
-                int set1 = find(e.src);
-                int set2 = find(e.dest);
-
-                if (set1 == set2) continue; // same component, skip
-
-                if (cheapest[set1] == null || cheapest[set1].weight > e.weight)
-                    cheapest[set1] = e;
-
-                if (cheapest[set2] == null || cheapest[set2].weight > e.weight)
-                    cheapest[set2] = e;
+            // mark used flower types by neighbors
+            for (int neighbor : adj[i]) {
+                if (ans[neighbor] != 0) {
+                    used[ans[neighbor]] = true;
+                }
             }
 
-            // Step 2: Add those cheapest edges to MST
-            for (int i = 0; i < V; i++) {
-                Edge e = cheapest[i];
-                if (e != null) {
-                    int set1 = find(e.src);
-                    int set2 = find(e.dest);
-
-                    if (set1 == set2) continue;
-
-                    // include this edge in MST
-                    System.out.println("Edge: " + e.src + "-" + e.dest + " Weight: " + e.weight);
-                    mstWeight += e.weight;
-                    union(set1, set2);
-                    components--;
+            // assign smallest available flower type
+            for (int color = 1; color <= 4; color++) {
+                if (!used[color]) {
+                    ans[i] = color;
+                    break;
                 }
             }
         }
 
-        return mstWeight;
+        return ans;
     }
 
     public static void main(String[] args) {
         Scanner sc = new Scanner(System.in);
 
-        int V = sc.nextInt(); // number of vertices
-        int E = sc.nextInt(); // number of edges
+        int n = sc.nextInt(); 
+        int m = sc.nextInt(); 
 
-        List<Edge> edges = new ArrayList<>();
-        for (int i = 0; i < E; i++) {
-            edges.add(new Edge(sc.nextInt(), sc.nextInt(), sc.nextInt()));
+        int[][] paths = new int[m][2];
+        for (int i = 0; i < m; i++) {
+            paths[i][0] = sc.nextInt();
+            paths[i][1] = sc.nextInt();
         }
 
-        int totalWeight = boruvkaMST(V, edges);
-        System.out.println("Total Weight of MST: " + totalWeight);
+        int[] result = assignFlowers(n, paths);
 
+        for (int flower : result) {
+            System.out.print(flower + " ");
+        }
+        System.out.println();
+        
         sc.close();
-    }
-}
-
-class Edge {
-    int src, dest, weight;
-    Edge(int s, int d, int w) {
-        src = s;
-        dest = d;
-        weight = w;
     }
 }
   
@@ -128,8 +117,8 @@ class Edge {
 ```
 
 ## Output:
-<img width="663" height="497" alt="image" src="https://github.com/user-attachments/assets/3ef60c93-c172-4f4c-b4a0-42a4b4791c3f" />
 
+<img width="514" height="468" alt="image" src="https://github.com/user-attachments/assets/6405940e-8a92-43bd-9956-5d3527a15d63" />
 
 
 ## Result:
